@@ -1,0 +1,54 @@
+name: Court suggestions
+
+on:
+  schedule:
+    # Run hourly; we will gate using Melbourne time inside the job
+    - cron: "0 */2 * * *"
+  workflow_dispatch:
+
+jobs:
+  suggest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.inc
+
+      - name: Gate (configurable schedule window)
+        id: gate
+        env:
+          RUN_TZ: ${{ vars.RUN_TZ }}
+          RUN_DAYS: ${{ vars.RUN_DAYS }}
+          RUN_START_HOUR: ${{ vars.RUN_START_HOUR }}
+          RUN_END_HOUR: ${{ vars.RUN_END_HOUR }}
+        run: python src/time_gate.py
+
+      - name: Run suggestions (and email if any)
+        if: steps.gate.outputs.continue == 'true'
+        env:
+          # Required
+          DATES: ${{ vars.DATES }}
+          SESSION_LENGTH_HOURS: ${{ vars.SESSION_LENGTH_HOURS }}
+          WINDOW_START: ${{ vars.WINDOW_START }}
+          WINDOW_END: ${{ vars.WINDOW_END }}
+
+          # Optional email
+          SMTP_HOST: ${{ secrets.SMTP_HOST }}
+          SMTP_PORT: ${{ secrets.SMTP_PORT }}
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
+          EMAIL_TO: ${{ secrets.EMAIL_TO }}
+          EMAIL_SUBJECT: ${{ vars.EMAIL_SUBJECT }}
+        run: |
+          python suggest_sessions.py
