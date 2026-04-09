@@ -28,6 +28,7 @@ jobs:
       - name: Gate (configurable schedule window)
         id: gate
         env:
+          RUN_ENABLED: ${{ vars.RUN_ENABLED }}
           RUN_TZ: ${{ vars.RUN_TZ }}
           RUN_DAYS: ${{ vars.RUN_DAYS }}
           RUN_START_HOUR: ${{ vars.RUN_START_HOUR }}

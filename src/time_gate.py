@@ -12,6 +12,10 @@ def _get_env(name: str, default: str) -> str:
     return (os.getenv(name) or default).strip()
 
 
+def _parse_bool(value: str) -> bool:
+    return value.strip().lower() in {"1", "true", "yes", "on", "y"}
+
+
 def _write_github_output(key: str, value: str) -> None:
     """
     Write a step output for GitHub Actions.
@@ -26,6 +30,7 @@ def _write_github_output(key: str, value: str) -> None:
 
 def main() -> int:
     load_dotenv()
+    run_enabled = _parse_bool(_get_env("RUN_ENABLED", "true"))
     run_tz = _get_env("RUN_TZ", "Australia/Melbourne")
     run_days_raw = _get_env("RUN_DAYS", "thu,fri").lower()
     start_hour_raw = _get_env("RUN_START_HOUR", "8")
@@ -63,9 +68,10 @@ def main() -> int:
 
     is_wanted_day = now.weekday() in wanted_days
     in_window = (now.hour >= start_hour) and (now.hour <= end_hour)  # inclusive
-    should_continue = is_wanted_day and in_window
+    should_continue = run_enabled and is_wanted_day and in_window
 
     print(f"Local now ({run_tz}): {now.isoformat(timespec='minutes')}")
+    print(f"RUN_ENABLED: {run_enabled}")
     print(
         f"Window: days={sorted(wanted_days)} hours={start_hour}..{end_hour} (inclusive)"
     )
