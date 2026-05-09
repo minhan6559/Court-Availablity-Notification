@@ -72,32 +72,24 @@ def fetch_schema_html(
     base_url: str = BASE_URL,
     timeout_seconds: int = 60,
 ) -> str:
-    params = {
+    data = {
+        "id_sport": sport_id,
         "day": target_date.day,
         "month": target_date.month,
         "year": target_date.year,
-        "id_sport": sport_id,
-        "default_view": "week",
-        "reset_date": 0,
         "event": "changeWeek",
-        "id_infotab": 0,
-        "time": "",
-        "filterId": "false",
-        "filterChecked": 0,
-        "tab_type": "normal",
-        "display_type": "timetable",
-        "labels": "",
         "timetableWidth": timetable_width,
-        "schema_fixed_date": "",
+        "arLabelId": "",
     }
     headers = {
         "User-Agent": DEFAULT_USER_AGENT,
         "Referer": f"{base_url}/",
         "Accept": "text/html,application/xhtml+xml;q=0.9,*/*;q=0.8",
         "Accept-Language": "en-AU,en;q=0.9",
+        "X-Requested-With": "XMLHttpRequest",
     }
 
-    response = requests.get(SCHEMA_URL, params=params, headers=headers, timeout=timeout_seconds)
+    response = requests.post(SCHEMA_URL, data=data, headers=headers, timeout=timeout_seconds)
     response.raise_for_status()
     if response.status_code != 200:
         raise RuntimeError(f"Unexpected HTTP status: {response.status_code}")
